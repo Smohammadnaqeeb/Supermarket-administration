@@ -52,33 +52,63 @@ Ensure you have a running MySQL server. Create a database called `supermarket_db
 
 ## Railway Deployment Instructions
 
-Railway supports deploying multiple services from a single GitHub repository (Monorepo setup). You will create **three services** in your Railway project:
+We have structured the project to support two deployment models:
+- **Option A (Recommended - Simpler & Cheaper)**: Serve both the React frontend and Flask backend inside a single unified service.
+- **Option B (Decoupled)**: Deploy the frontend and backend as separate, standalone services.
 
-### Service 1: MySQL Database
+---
+
+### Option A (Recommended): Unified Single-Service Deployment
+
+You will deploy **two services** in your Railway project: a MySQL Database and one Web Service.
+
+#### Step 1: Spin up MySQL Database
 1. Inside your Railway project, click **New** -> **Database** -> **Add MySQL**.
-2. Railway will spin up a MySQL service. Copy its connection variables (`MYSQLHOST`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQLPORT`, `MYSQLDATABASE`).
+2. Copy its connection variables (`MYSQLHOST`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQLPORT`, `MYSQLDATABASE`).
 
-### Service 2: Backend API (Python)
+#### Step 2: Deploy Unified Application Service
 1. Click **New** -> **GitHub Repo** -> select this repository.
-2. Go to the service **Settings**:
-   - Rename the service to `backend`.
-   - Under **Root Directory**, set it to `backend`.
-   - Railway will automatically detect the `Dockerfile` inside `backend/` and compile the container.
-3. Under **Variables** (Environment variables), add:
-   - `DB_HOST`: `${{MySQL.MYSQLHOST}}` (referencing your MySQL service variable)
+2. Under **Settings**, leave the **Root Directory** empty (default root `/`).
+3. Railway will read the root `railway.json` and build the root `Dockerfile` automatically (compiling the React frontend, copying the static assets into Flask, and starting the API server).
+4. Under **Variables** (Environment variables), add:
+   - `DB_HOST`: `${{MySQL.MYSQLHOST}}` (links automatically to your database)
    - `DB_USER`: `${{MySQL.MYSQLUSER}}`
    - `DB_PASSWORD`: `${{MySQL.MYSQLPASSWORD}}`
    - `DB_PORT`: `${{MySQL.MYSQLPORT}}`
    - `DB_DATABASE`: `${{MySQL.MYSQLDATABASE}}`
    - `SECRET_KEY`: `your_random_secret_key_here`
    - `PORT`: `5000`
+5. Under **Settings**, click **Generate Domain** to get a public URL for your application!
 
-### Service 3: Frontend SPA (React)
+---
+
+### Option B: Decoupled Multi-Service Deployment
+
+You will deploy **three services**: a MySQL Database, a Backend Web Service, and a Frontend Web Service.
+
+#### Step 1: Spin up MySQL Database
+1. Click **New** -> **Database** -> **Add MySQL**.
+
+#### Step 2: Deploy Backend Service
 1. Click **New** -> **GitHub Repo** -> select this repository.
-2. Go to the service **Settings**:
+2. Under **Settings**:
+   - Rename the service to `backend`.
+   - Set **Root Directory** to `backend`.
+   - Railway will read `backend/railway.json` and build the python container.
+3. Under **Variables**, add:
+   - `DB_HOST`: `${{MySQL.MYSQLHOST}}`
+   - `DB_USER`: `${{MySQL.MYSQLUSER}}`
+   - `DB_PASSWORD`: `${{MySQL.MYSQLPASSWORD}}`
+   - `DB_PORT`: `${{MySQL.MYSQLPORT}}`
+   - `DB_DATABASE`: `${{MySQL.MYSQLDATABASE}}`
+   - `SECRET_KEY`: `your_random_secret_key_here`
+   - `PORT`: `5000`
+4. Under **Settings**, generate a domain for the backend service (e.g. `your-backend.up.railway.app`).
+
+#### Step 3: Deploy Frontend Service
+1. Click **New** -> **GitHub Repo** -> select this repository.
+2. Under **Settings**:
    - Rename the service to `frontend`.
-   - Under **Root Directory**, set it to `frontend`.
-   - Railway will automatically detect the `Dockerfile` inside `frontend/` and build the container, serving it via Nginx.
-3. Under **Variables**:
-   - If deploying separately, configure your API endpoint environment variable in your production build, or let Vite build it. Since it's built statically, you can expose a public domain from the backend service and set `VITE_API_URL` to that domain in your frontend build.
-4. Expose a public URL for the frontend service to access the system from your browser!
+   - Set **Root Directory** to `frontend`.
+   - Railway will read `frontend/railway.json` and build the Nginx static serving container.
+3. Generate a domain for your frontend service and enjoy!
