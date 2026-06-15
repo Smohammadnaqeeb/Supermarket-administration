@@ -18,7 +18,7 @@ from routes.reports import reports_bp
 # Import DB utilities
 from database.connection import check_db_connection, initialize_database, DB_HOST, DB_USER, DB_PORT, DB_DATABASE
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='')
 app.secret_key = os.getenv("SECRET_KEY", "supermarket_secret_key_2026")
 
 # Enable Cross-Origin Resource Sharing (CORS)
@@ -94,6 +94,19 @@ def run_db_initialization():
         'success': success,
         'message': message
     })
+
+@app.route('/')
+def serve_index():
+    return app.send_static_file('index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    if path.startswith('api/'):
+        return jsonify({'success': False, 'error': 'Endpoint not found.'}), 404
+    try:
+        return app.send_static_file(path)
+    except Exception:
+        return app.send_static_file('index.html')
 
 @app.errorhandler(404)
 def page_not_found(e):
