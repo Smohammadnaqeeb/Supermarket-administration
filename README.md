@@ -63,8 +63,7 @@ Railway supports deploying multiple services from a single GitHub repository (Mo
 2. Go to the service **Settings**:
    - Rename the service to `backend`.
    - Under **Root Directory**, set it to `backend`.
-   - Railway will detect `requirements.txt` and build it using Nixpacks.
-   - Under **Start Command**, specify: `gunicorn app:app`
+   - Railway will automatically detect the `Dockerfile` inside `backend/` and compile the container.
 3. Under **Variables** (Environment variables), add:
    - `DB_HOST`: `${{MySQL.MYSQLHOST}}` (referencing your MySQL service variable)
    - `DB_USER`: `${{MySQL.MYSQLUSER}}`
@@ -79,7 +78,7 @@ Railway supports deploying multiple services from a single GitHub repository (Mo
 2. Go to the service **Settings**:
    - Rename the service to `frontend`.
    - Under **Root Directory**, set it to `frontend`.
-   - Nixpacks will automatically compile the Vite build.
+   - Railway will automatically detect the `Dockerfile` inside `frontend/` and build the container, serving it via Nginx.
 3. Under **Variables**:
    - If deploying separately, configure your API endpoint environment variable in your production build, or let Vite build it. Since it's built statically, you can expose a public domain from the backend service and set `VITE_API_URL` to that domain in your frontend build.
 4. Expose a public URL for the frontend service to access the system from your browser!
